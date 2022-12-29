@@ -17,6 +17,9 @@
   ],
   "author": "yuya sato",
   "license": "MIT",
+  "publishConfig": {
+    "registry": "https://github.com/sattosan/swagger-servers-url-merger.git"
+  },
   "dependencies": {
     "js-yaml": "^4.1.0",
     "yargs": "^17.6.2"
