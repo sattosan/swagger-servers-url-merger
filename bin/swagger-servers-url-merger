@@ -1,0 +1,146 @@
+#!/usr/bin/env node
+"use strict";
+
+const fs = require("fs");
+const yaml = require("js-yaml");
+
+/**
+ * Read a yaml file at the specified path.
+ * @param filePath path of the yaml file. (ex ./openapi.yaml )
+ * @returns yaml file converted to a object.
+ */
+function loadYamlFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    console.error(`${filePath} is not found`);
+    process.exit(1);
+  }
+  const yamlText = fs.readFileSync(filePath, "utf8");
+  return yaml.load(yamlText);
+}
+
+/**
+ * Move servers.url with paths.
+ * @param paths paths object of openapi.yaml
+ * @param serversUrl value specified in servers.url. (ex /v1 )
+ * @returns paths object in /serversUrl/path format (ex /v1/goods )
+ */
+function addServersUrl(paths, serversUrl) {
+  const newPaths = Object.keys(paths).map((key) => ({
+    [`${serversUrl}${key}`]: paths[key],
+  }));
+  return concatObjectList(newPaths);
+}
+
+/**
+ * Write objects in yaml format to a file.
+ * @param object objects in yaml format.
+ * @param filepath output file path.
+ */
+function writeYamlFile(object, filepath) {
+  const yamlText = yaml.dump(object);
+  fs.writeFile(filepath, yamlText, "utf8", (err) => {
+    if (err) {
+      console.error(err.message);
+      process.exit(1);
+    }
+    console.log(`Wrote the merged definitions to ${filepath}`);
+  });
+}
+
+/**
+ * Data Structure Generation.
+ * @param filePaths openapi file path list (ex [./openapi-v1.yaml, ./openapi-v2.yaml] )
+ * @returns List containing openapi file paths and objects.
+ */
+function buildOpenApiInfoList(filePaths) {
+  return filePaths.map((filePath) => ({
+    filePath,
+    data: loadYamlFile(filePath),
+  }));
+}
+
+/**
+ * Merge servers.url and paths in all openapi files.
+ * @param opneapiDataList all openapi file paths and objects.
+ * @return paths object
+ */
+function getMergedPaths(opneapiDataList) {
+  const paths = opneapiDataList.map((openapiData) =>
+    addServersUrl(openapiData.data.paths, openapiData.data.servers[0].url)
+  );
+  return concatObjectList(paths);
+}
+
+/**
+ * Combine objects in an array into a single object.
+ * @param objectList object list (ex [{a: 1}, {b: 2}] )
+ * @returns (ex {a: 1, b: 2} )
+ */
+function concatObjectList(objectList) {
+  return Object.assign.apply(Object, [{}].concat(objectList));
+}
+
+/**
+ * Integrate openapi objects into one.
+ * @param baseOpenApiData Base openapi objetct.
+ * @param url new servers.url to replace.
+ * @param paths merged paths.
+ * @returns Integrated openapi objects.
+ */
+function getMergedOpenApiData(baseOpenApiData, url, paths) {
+  return {
+    ...baseOpenApiData,
+    servers: [{ url }],
+    paths,
+  };
+}
+
+/**
+ * Get arguments using command line parser.
+ * @returns Return per-command arguments.
+ */
+function getArgv() {
+  const yargs = require("yargs");
+  // Exclude the first two arguments.
+  const slicedArgs = process.argv.slice(2);
+
+  return yargs(slicedArgs)
+    .option("url", {
+      alias: "u",
+      description: "Specify the servers.url to be replaced.",
+      type: "string",
+      default: "http://localhost:8080",
+    })
+    .option("input", {
+      alias: "i",
+      description:
+        "Multiple file paths to be merged. (ex -i ./openapi-v1.yaml -i ./openapi-v2.yaml",
+      type: "array",
+    })
+    .option("output", {
+      alias: "o",
+      description: "Output file path.",
+      type: "string",
+      default: "./openapi.yaml",
+    })
+    .help().argv;
+}
+
+try {
+  const argv = getArgv();
+  const newServersUrl = argv.url;
+  const inputFilePaths = argv.input;
+  const outputFilePath = argv.output;
+
+  const openapiInfoList = buildOpenApiInfoList(inputFilePaths);
+  const mergedPaths = getMergedPaths(openapiInfoList);
+  const baseOpenApiData = openapiInfoList[0].data;
+  const openapiDataWithMergedPaths = getMergedOpenApiData(
+    baseOpenApiData,
+    newServersUrl,
+    mergedPaths
+  );
+  writeYamlFile(openapiDataWithMergedPaths, outputFilePath);
+} catch (err) {
+  console.error(err.message);
+}

@@ -1,0 +1,42 @@
+openapi: 3.0.0
+info:
+  title: example-api
+  version: v.1.0
+  description: Example RESTful API
+servers:
+  - url: /v2
+paths:
+  /example:
+    get:
+      operationId: example
+      summary: example
+      description: example
+      parameters:
+        - $ref: "#/components/parameters/example"
+      responses:
+        "200":
+          description: 200 (OK)
+          content:
+            application/json:
+              schema:
+                title: response
+                type: object
+                properties:
+                  result:
+                    $ref: "#/components/schemas/success"
+        "400":
+          description: >-
+            error occurred - see status code and problem object for more
+            information.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/bad_request_response"
+        "500":
+          description: >-
+            error occurred - see status code and problem object for more
+            information.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/internal_error_response"
