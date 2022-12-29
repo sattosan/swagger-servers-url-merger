@@ -8,6 +8,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sattosan/swagger-servers-url-merger.git"
+  },
   "keywords": [
     "swagger",
     "merge",
@@ -17,9 +21,10 @@
   ],
   "author": "yuya sato",
   "license": "MIT",
-  "publishConfig": {
-    "registry": "https://github.com/sattosan/swagger-servers-url-merger.git"
+  "bugs": {
+    "url": "https://github.com/sattosan/swagger-servers-url-merger/issues"
   },
+  "homepage": "https://github.com/sattosan/swagger-servers-url-merger#readme",
   "dependencies": {
     "js-yaml": "^4.1.0",
     "yargs": "^17.6.2"
