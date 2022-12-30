@@ -1,6 +1,6 @@
 {
   "name": "swagger-servers-url-merger",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Merge each servers.url and path for multiple Swagger definitions.",
   "bin": {
     "swagger-servers-url-merger": "bin/swagger-servers-url-merger"
